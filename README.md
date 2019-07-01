@@ -1,4 +1,4 @@
-Android permission Cordova plugin plus
+Android Permission Cordova Plugin Plus
 ========
 
 这是一份来自 [cordova-plugin-android-permissions](https://github.com/NeoLSN/cordova-plugin-android-permissions) 的拷贝，原来的版本缺少维护，并且存在致命缺陷。 
