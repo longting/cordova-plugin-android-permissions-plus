@@ -1,5 +1,7 @@
-Android permission Cordova plugin
+Android permission Cordova plugin plus
 ========
+
+这是一份来自 [cordova-plugin-android-permissions](https://github.com/NeoLSN/cordova-plugin-android-permissions) 的拷贝，原来的版本缺少维护，并且存在致命缺陷。 
 
 This plugin is designed for supporting Android new permissions checking mechanism.
 
@@ -9,11 +11,18 @@ For old Android plugins you (developers) are using may not support this new mech
 
 As a convenience we support browser and iOS platforms as well. But this plugin will simple reply that any permission checked of requested was granted.
 
+新特性
+---------
+1. 解决了里面的若干bug
+2. 并且去掉了废弃的接口，仅支持两个批量接口checkPermissions和requestPermissions
+3. 代码中增加了必要的日志输出
+4. 权限列表有增加
+
 Installation
 --------
 
-```bash
-cordova plugin add cordova-plugin-android-permissions
+```
+cordova plugin add https://github.com/longting/cordova-plugin-android-permissions-plus.git
 ```
 
 ※ Support Android SDK >= 14
@@ -25,16 +34,8 @@ Usage
 
 ```javascript
 var permissions = cordova.plugins.permissions;
-permissions.checkPermission(permission, successCallback, errorCallback);
-permissions.requestPermission(permission, successCallback, errorCallback);
+permissions.checkPermissions(permissions, successCallback, errorCallback);
 permissions.requestPermissions(permissions, successCallback, errorCallback);
-```
-
-#### Deprecated API - still work now, will not support in the future.
-```javascript
-permissions.hasPermission(permission, successCallback, errorCallback);
-permissions.hasPermission(successCallback, errorCallback, permission);
-permissions.requestPermission(successCallback, errorCallback, permission);
 ```
 
 ### Permission Name
@@ -50,59 +51,42 @@ permissions.READ_CALENDAR
 ...
 ```
 
-## Examples
-```js
-var permissions = cordova.plugins.permissions;
-```
-
-#### Quick check
-```js
-
-permissions.hasPermission(permissions.CAMERA, function( status ){
-  if ( status.hasPermission ) {
-    console.log("Yes :D ");
-  }
-  else {
-    console.warn("No :( ");
-  }
-});
-```
-#### Quick request
-```js
-permissions.requestPermission(permissions.CAMERA, success, error);
-
-function error() {
-  console.warn('Camera permission is not turned on');
-}
-
-function success( status ) {
-  if( !status.hasPermission ) error();
-}
-```
 #### Example multiple permissions
 ```js
+var permissions = cordova.plugins.permissions;
 var list = [
-  permissions.CAMERA,
-  permissions.GET_ACCOUNTS
-];
+    permissions.WRITE_EXTERNAL_STORAGE,
+    permissions.READ_CONTACTS,
+    permissions.ACCESS_FINE_LOCATION
+    ];
 
-permissions.hasPermission(list, callback, null);
+permissions.checkPermissions(list, success, error);// 批量检查指定权限
 
 function error() {
-  console.warn('Camera or Accounts permission is not turned on');
+    console.warn('检查或者获取权限发生的错误');
 }
 
 function success( status ) {
-  if( !status.hasPermission ) {
-  
-    permissions.requestPermissions(
-      list,
-      function(status) {
-        if( !status.hasPermission ) error();
-      },
-      error);
-  }
+    console.log("检查完成")
+    if( !status.hasPermission ) {
+        permissions.requestPermissions(// 批量获取指定权限
+            list,
+            function(status) {
+                if( !status.hasPermission ){
+                    console.log("获取权限失败"+JSON.stringify(status))
+                    error()
+                } else {
+                    console.log("申请权限成功")
+                }                            
+            },
+            error
+        );
+    }else{
+          console.log("有权限")
+
+    }
 }
+
 ```
 
 License
