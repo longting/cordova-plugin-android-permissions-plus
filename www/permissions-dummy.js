@@ -153,7 +153,6 @@ function Permissions() {
     this.WRITE_SOCIAL_STREAM = 'android.permission.WRITE_SOCIAL_STREAM';
     this.WRITE_SYNC_SETTINGS = 'android.permission.WRITE_SYNC_SETTINGS';
     this.WRITE_USER_DICTIONARY = 'android.permission.WRITE_USER_DICTIONARY';
-    this.WRITE_VOICEMAIL = 'com.android.voicemail.permission.WRITE_VOICEMAIL';
 }
 
 
@@ -163,7 +162,13 @@ Permissions.prototype = {
     },
     requestPermissions: function(permissions, successCallback, errorCallback) {
         successCallback( {hasPermission: true} );
-    }
+    },
+    checkNotification: function(successCallback, errorCallback) {
+        successCallback( {hasPermission: true} );
+    },
+    requestNotification: function(successCallback, errorCallback) {
+        successCallback( {hasPermission: true} );
+    },
 };
 
 

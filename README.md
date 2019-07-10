@@ -11,12 +11,18 @@ For old Android plugins you (developers) are using may not support this new mech
 
 As a convenience we support browser and iOS platforms as well. But this plugin will simple reply that any permission checked of requested was granted.
 
-新特性
+1.0.1 新特性
 ---------
 1. 解决了里面的若干bug
 2. 并且去掉了废弃的接口，仅支持两个批量接口checkPermissions和requestPermissions
 3. 代码中增加了必要的日志输出
 4. 权限列表有增加
+
+1.1.0 新特性
+---------
+1. 增加消息通知栏权限检查和申请  
+注意：申请通知栏权限返回都是成功，因为获取不到申请结果，如果返回失败，则申请出现异常，查看异常，有需要提缺陷。  
+
 
 Installation
 --------
@@ -51,7 +57,7 @@ permissions.READ_CALENDAR
 ...
 ```
 
-#### Example multiple permissions
+#### 批量申请例子
 ```js
 var permissions = cordova.plugins.permissions;
 var list = [
@@ -88,6 +94,31 @@ function success( status ) {
 }
 
 ```
+
+#### 消息通知栏权限例子
+```js
+var permissions = cordova.plugins.permissions;
+
+permissions.checkNotification(function(status){
+    console.log("通知权限检查返回status:"+JSON.stringify(status) )
+    if(!status.hasPermission){
+        console.log("请求通知权限")
+        permissions.requestNotification(function(status){
+            console.log("请求通知权限status:"+JSON.stringify(status) )
+             
+        },function(){
+            console.log("请求通知权限失败")
+        });
+    }else{
+        console.log("无通知权限")
+    }
+},function(){
+    console.log("检查通知权限失败")
+});
+            
+
+```
+
 
 License
 --------

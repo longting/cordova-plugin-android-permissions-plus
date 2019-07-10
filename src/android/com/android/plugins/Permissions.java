@@ -1,6 +1,11 @@
 package com.android.plugins;
 
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import org.apache.cordova.CallbackContext;
@@ -17,6 +22,11 @@ public class Permissions extends CordovaPlugin {
     private static final String ACTION_CHECK_PERMISSION = "checkPermissions";
     private static final String ACTION_REQUEST_PERMISSION = "requestPermission";
     private static final String ACTION_REQUEST_PERMISSIONS = "requestPermissions";
+
+    private static final String ACTION_CHECK_NOTIFICATION= "checkNotification";
+    private static final String ACTION_REQUEST_NOTIFICATION = "requestNotification";
+
+
 
     private static final int REQUEST_CODE_ENABLE_PERMISSION = 55433;
 
@@ -37,7 +47,7 @@ public class Permissions extends CordovaPlugin {
                 }
             });
             return true;
-        } else if (ACTION_REQUEST_PERMISSION.equals(action) || ACTION_REQUEST_PERMISSIONS.equals(action)) {
+        } else if (ACTION_REQUEST_PERMISSIONS.equals(action)) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     try {
@@ -47,6 +57,29 @@ public class Permissions extends CordovaPlugin {
                         JSONObject returnObj = new JSONObject();
                         addProperty(returnObj, KEY_ERROR, ACTION_REQUEST_PERMISSION);
                         addProperty(returnObj, KEY_MESSAGE, "Request permission has been denied.");
+                        callbackContext.error(returnObj);
+                        permissionsCallback = null;
+                    }
+                }
+            });
+            return true;
+        } else if (ACTION_CHECK_NOTIFICATION.equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    checkNotificationAction(callbackContext);
+                }
+            });
+            return true;
+        } else if (ACTION_REQUEST_NOTIFICATION.equals(action)) {
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    try {
+                        requestNotificationAction(callbackContext);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        JSONObject returnObj = new JSONObject();
+                        addProperty(returnObj, KEY_ERROR, ACTION_REQUEST_NOTIFICATION);
+                        addProperty(returnObj, KEY_MESSAGE, "Request Notification has been denied.");
                         callbackContext.error(returnObj);
                         permissionsCallback = null;
                     }
@@ -76,6 +109,17 @@ public class Permissions extends CordovaPlugin {
             permissionsCallback.error(returnObj);
         }
         permissionsCallback = null;
+    }
+
+    /**
+     * 检查通知栏权限
+     * @param callbackContext
+     */
+    private void checkNotificationAction(CallbackContext callbackContext) {
+        boolean has = NotificationManagerCompat.from(cordova.getContext()).areNotificationsEnabled();
+        JSONObject returnObj = new JSONObject();
+        addProperty(returnObj, KEY_RESULT_PERMISSION,has);
+        callbackContext.success(returnObj);
     }
 
     private void checkPermissionAction(CallbackContext callbackContext, JSONArray permission) {
@@ -108,6 +152,45 @@ public class Permissions extends CordovaPlugin {
         }
     }
 
+    private void requestNotificationAction(CallbackContext callbackContext) throws Exception {
+        Log.i(TAG, "Build.VERSION:" + Build.VERSION_CODES.M);
+        Intent intent = new Intent();
+        JSONObject returnObj = new JSONObject();
+        String pkgName = cordova.getActivity().getPackageName();
+        ApplicationInfo info = cordova.getActivity().getApplicationInfo();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
+            intent.putExtra("android.provider.extra.APP_PACKAGE",pkgName);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {  //5.0
+            intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
+            intent.putExtra("app_package", pkgName);
+            intent.putExtra("app_uid", info.uid);
+
+        } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {  //4.4
+            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            intent.setData(Uri.parse("package:" +pkgName));
+        } else if (Build.VERSION.SDK_INT >= 15) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.setAction("android.settings.APPLICATION_DETAILS_SETTINGS");
+            intent.setData(Uri.fromParts("package",pkgName, null));
+        }
+
+        try {
+            cordova.startActivityForResult(this,intent,REQUEST_CODE_ENABLE_PERMISSION);
+        } catch (Exception e) {
+            e.printStackTrace();
+            intent = new Intent();
+            // 出现异常则跳转到应用设置界面
+            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            Uri uri = Uri.fromParts("package", pkgName, null);
+            intent.setData(uri);
+            cordova.startActivityForResult(this,intent,REQUEST_CODE_ENABLE_PERMISSION);
+        }
+        addProperty(returnObj, KEY_RESULT_PERMISSION, true);
+        callbackContext.success(returnObj);
+    }
+
     private void requestPermissionAction(CallbackContext callbackContext, JSONArray permissions) throws Exception {
         if (permissions == null || permissions.length() == 0) {
             JSONObject returnObj = new JSONObject();
@@ -123,10 +206,10 @@ public class Permissions extends CordovaPlugin {
             addProperty(returnObj, KEY_RESULT_PERMISSION, true);
             callbackContext.success(returnObj);
         } else {
-            Log.i("permission", ">" + Build.VERSION_CODES.M);
+            Log.i(TAG, ">" + Build.VERSION_CODES.M);
             permissionsCallback = callbackContext;
             String[] permissionArray = getPermissions(permissions);
-            Log.i("permission", "ps:" + toString(permissionArray));
+            Log.i(TAG, "ps:" + toString(permissionArray));
             cordova.requestPermissions(this, REQUEST_CODE_ENABLE_PERMISSION, permissionArray);
         }
     }
