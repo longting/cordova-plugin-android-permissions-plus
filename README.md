@@ -23,7 +23,6 @@ As a convenience we support browser and iOS platforms as well. But this plugin w
 1. 增加消息通知栏权限检查和申请  
 注意：申请通知栏权限返回都是成功，因为获取不到申请结果，如果返回失败，则申请出现异常，查看异常，有需要提缺陷。  
 
-
 Installation
 --------
 
@@ -42,6 +41,9 @@ Usage
 var permissions = cordova.plugins.permissions;
 permissions.checkPermissions(permissions, successCallback, errorCallback);
 permissions.requestPermissions(permissions, successCallback, errorCallback);
+permissions.checkNotification(successCallback, errorCallback);
+permissions.requestNotification(successCallback, errorCallback);
+
 ```
 
 ### Permission Name
